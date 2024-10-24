@@ -190,7 +190,6 @@ fun SignInScreen(modifier: Modifier = Modifier) {
                     password != confirmPassword -> errorMessage = "Passwords do not match."
                     else -> {
                         errorMessage = ""
-                        // Action pour valider l'inscription
                     }
                 }
             },

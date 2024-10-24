@@ -1,6 +1,8 @@
 package com.example.myprojet1
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,12 +24,28 @@ import androidx.compose.ui.unit.dp
 import com.example.myprojet1.ui.theme.MyProjet1Theme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var sharedPreferences: SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            MyProjet1Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(Modifier.padding(innerPadding))
+
+        // Initialiser les SharedPreferences
+        sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+
+        // Vérifier si l'utilisateur est déjà connecté
+        val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
+
+        if (isLoggedIn) {
+            // Rediriger vers MainActivity5 si l'utilisateur est déjà connecté
+            val intent = Intent(this, MainActivity5::class.java)
+            startActivity(intent)
+            finish() // Fermer l'activité de connexion
+        } else {
+            setContent {
+                MyProjet1Theme {
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        LoginScreen(Modifier.padding(innerPadding), sharedPreferences)
+                    }
                 }
             }
         }
@@ -35,7 +53,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen(modifier: Modifier = Modifier, sharedPreferences: SharedPreferences) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
@@ -50,7 +68,6 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Ajout de l'image au-dessus du texte Login
-
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -89,11 +106,11 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(30.dp))
         Image(
-            painter = painterResource(id = R.drawable.login), // Image login.png dans res/drawable
+            painter = painterResource(id = R.drawable.login),
             contentDescription = "Login Image",
             modifier = Modifier
-                .size(250.dp) // Taille de l'image
-                .padding(bottom = 30.dp) // Espacement entre l'image et le texte Login
+                .size(250.dp)
+                .padding(bottom = 30.dp)
         )
 
         TextField(
@@ -143,7 +160,6 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                // E-mail et mot de passe pour la connexion
                 val validEmail = "cyrine@gmail.com"
                 val validPassword = "123"
 
@@ -152,6 +168,12 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 } else if (password.isEmpty()) {
                     errorMessage = "Please enter your password."
                 } else if (email == validEmail && password == validPassword) {
+                    // Enregistrer l'état de connexion
+                    with(sharedPreferences.edit()) {
+                        putBoolean("isLoggedIn", true)
+                        apply()
+                    }
+
                     // Redirection vers MainActivity5
                     val intent = Intent(context, MainActivity5::class.java)
                     context.startActivity(intent)
@@ -171,6 +193,6 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 @Composable
 fun LoginScreenPreview() {
     MyProjet1Theme {
-        LoginScreen()
+        LoginScreen(Modifier, LocalContext.current.getSharedPreferences("user_prefs", Context.MODE_PRIVATE))
     }
 }
